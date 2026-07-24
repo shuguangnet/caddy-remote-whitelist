@@ -71,6 +71,16 @@ sudo sh /tmp/caddy-remote-whitelist-install.sh \
   --interval 5m
 ```
 
+For a private whitelist data repository, pass a GitHub token during the same
+one-line install flow:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/shuguangnet/caddy-remote-whitelist/main/install.sh \
+  -o /tmp/caddy-remote-whitelist-install.sh
+sudo GITHUB_TOKEN="$GITHUB_TOKEN" sh /tmp/caddy-remote-whitelist-install.sh \
+  --interval 5m
+```
+
 By default the installer uses:
 
 ```text
@@ -78,6 +88,31 @@ https://raw.githubusercontent.com/shuguangnet/caddy-whitelist-data/main/allowed-
 ```
 
 Pass `--url` to use a different HTTPS fragment.
+
+### Private GitHub repository
+
+If the whitelist data repository is private, provide a GitHub token with read
+access to the repository contents:
+
+```bash
+sudo sh /tmp/caddy-remote-whitelist-install.sh \
+  --interval 5m \
+  --github-token "$GITHUB_TOKEN"
+```
+
+The installer stores the token in `/etc/caddy-remote-whitelist.conf`, which is
+created with mode `0600`. Future timer runs automatically use the token when
+downloading the fragment.
+
+You can also pass the token through the environment:
+
+```bash
+sudo GITHUB_TOKEN="$GITHUB_TOKEN" ./install.sh \
+  --interval 5m
+```
+
+Use a fine-grained GitHub token scoped only to the whitelist data repository
+with `Contents: Read-only`.
 
 ### Docker and 1Panel
 
@@ -140,8 +175,12 @@ does not break.
 
 Anyone who can modify the remote fragment can change access to every connected
 server. Use HTTPS, protect the publishing account, and avoid URLs controlled by
-third parties. URL query credentials are stored locally in a root-only file but
-may still appear in server logs; a non-secret, hard-to-guess path is preferable.
+third parties. For private GitHub repositories, prefer a fine-grained read-only
+token scoped to the whitelist data repository. Passing a token as a command-line
+argument may leave it in shell history; the `GITHUB_TOKEN` environment variable
+is preferable for interactive installs. URL query credentials are stored locally
+in a root-only file but may still appear in server logs; an authorization header
+is preferable.
 
 ## License
 

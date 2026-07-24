@@ -20,6 +20,7 @@ Options:
   --caddyfile FILE          Caddyfile path on host or inside container
   --caddy-bin PATH          Caddy executable or container command
   --service NAME            Caddy systemd service name
+  --github-token TOKEN      GitHub token for private repository reads
   --max-bytes NUMBER        Maximum downloaded size (default: 1048576)
   -h, --help                Show this help
 
@@ -48,6 +49,7 @@ update_whitelist() {
 	: "${CADDYFILE:=/etc/caddy/Caddyfile}"
 	: "${CADDY_BIN:=caddy}"
 	: "${CADDY_SERVICE:=caddy}"
+	: "${GITHUB_TOKEN:=}"
 	: "${MAX_BYTES:=1048576}"
 	: "${STATE_DIR:=}"
 
@@ -121,10 +123,18 @@ update_whitelist() {
 		fi
 	}
 
-	curl --fail --silent --show-error --location \
-		--proto '=https' --tlsv1.2 \
-		--connect-timeout 10 --max-time 30 \
-		--output "$temp_file" "$REMOTE_URL"
+	if [ -n "$GITHUB_TOKEN" ]; then
+		curl --fail --silent --show-error --location \
+			--proto '=https' --tlsv1.2 \
+			--connect-timeout 10 --max-time 30 \
+			--header "Authorization: Bearer $GITHUB_TOKEN" \
+			--output "$temp_file" "$REMOTE_URL"
+	else
+		curl --fail --silent --show-error --location \
+			--proto '=https' --tlsv1.2 \
+			--connect-timeout 10 --max-time 30 \
+			--output "$temp_file" "$REMOTE_URL"
+	fi
 
 	if [ ! -s "$temp_file" ]; then
 		printf 'Downloaded whitelist is empty; keeping the current file.\n' >&2
@@ -176,6 +186,7 @@ TARGET_FILE="${TARGET_FILE:-/etc/caddy/remote-whitelist.caddy}"
 CADDYFILE="${CADDYFILE:-/etc/caddy/Caddyfile}"
 CADDY_BIN="${CADDY_BIN:-caddy}"
 CADDY_SERVICE="${CADDY_SERVICE:-caddy}"
+GITHUB_TOKEN="${GITHUB_TOKEN:-}"
 DOCKER_CONTAINER="${DOCKER_CONTAINER:-}"
 MODE="${MODE:-auto}"
 INTERVAL="${INTERVAL:-5m}"
@@ -192,6 +203,7 @@ while [ "$#" -gt 0 ]; do
 		--caddyfile) CADDYFILE=$2; shift 2 ;;
 		--caddy-bin) CADDY_BIN=$2; shift 2 ;;
 		--service) CADDY_SERVICE=$2; shift 2 ;;
+		--github-token) GITHUB_TOKEN=$2; shift 2 ;;
 		--max-bytes) MAX_BYTES=$2; shift 2 ;;
 		-h|--help) usage; exit 0 ;;
 		*) printf 'Unknown option: %s\n' "$1" >&2; usage >&2; exit 2 ;;
@@ -306,6 +318,7 @@ umask 077
 	printf 'CADDYFILE=%s\n' "$(shell_quote "$CADDYFILE")"
 	printf 'CADDY_BIN=%s\n' "$(shell_quote "$CADDY_BIN")"
 	printf 'CADDY_SERVICE=%s\n' "$(shell_quote "$CADDY_SERVICE")"
+	printf 'GITHUB_TOKEN=%s\n' "$(shell_quote "$GITHUB_TOKEN")"
 	printf 'MAX_BYTES=%s\n' "$(shell_quote "$MAX_BYTES")"
 } > "$CONFIG_FILE"
 chmod 0600 "$CONFIG_FILE"

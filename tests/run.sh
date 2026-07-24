@@ -11,14 +11,28 @@ printf '@allowed remote_ip 127.0.0.1\n' > "$TEST_DIR/source.caddy"
 
 cat > "$TEST_DIR/bin/curl" <<'EOF'
 #!/bin/sh
+auth_seen=0
+output=
 while [ "$#" -gt 0 ]; do
-	if [ "$1" = "--output" ]; then
-		cp "$TEST_REMOTE_SOURCE" "$2"
-		exit 0
-	fi
-	shift
+	case "$1" in
+		--header)
+			if [ "$2" = "Authorization: Bearer ${TEST_EXPECT_AUTH_TOKEN:-}" ]; then
+				auth_seen=1
+			fi
+			shift 2
+			;;
+		--output)
+			output=$2
+			shift 2
+			;;
+		*) shift ;;
+	esac
 done
-exit 1
+if [ "${TEST_EXPECT_AUTH:-0}" -eq 1 ] && [ "$auth_seen" -ne 1 ]; then
+	exit 2
+fi
+[ -n "$output" ] || exit 1
+cp "$TEST_REMOTE_SOURCE" "$output"
 EOF
 
 cat > "$TEST_DIR/bin/caddy" <<'EOF'
@@ -47,6 +61,7 @@ TARGET_FILE='$TEST_DIR/etc/caddy/remote.caddy'
 CADDYFILE='$TEST_DIR/etc/caddy/Caddyfile'
 CADDY_BIN='$TEST_DIR/bin/caddy'
 CADDY_SERVICE='caddy'
+GITHUB_TOKEN='test-token'
 MAX_BYTES='1024'
 EOF
 
@@ -54,6 +69,8 @@ export PATH="$TEST_DIR/bin:$PATH"
 export TEST_REMOTE_SOURCE="$TEST_DIR/source.caddy"
 export TEST_SYSTEMCTL_LOG="$TEST_DIR/systemctl.log"
 export CADDY_REMOTE_WHITELIST_CONFIG="$TEST_DIR/config"
+export TEST_EXPECT_AUTH=1
+export TEST_EXPECT_AUTH_TOKEN=test-token
 
 "$REPO_DIR/install.sh" update
 cmp "$TEST_DIR/source.caddy" "$TEST_DIR/etc/caddy/remote.caddy"
@@ -72,6 +89,8 @@ fi
 grep -Fxq '@allowed remote_ip 127.0.0.1' "$TEST_DIR/etc/caddy/remote.caddy"
 
 unset TEST_CADDY_FAIL
+unset TEST_EXPECT_AUTH
+unset TEST_EXPECT_AUTH_TOKEN
 mkdir -p "$TEST_DIR/docker"
 printf '@allowed remote_ip 127.0.0.1\n' > "$TEST_DIR/source.caddy"
 
@@ -162,13 +181,16 @@ grep -Fxq '@allowed remote_ip 127.0.0.1' "$TEST_DOCKER_TARGET"
 unset TEST_CADDY_FAIL
 rm -f "$TEST_DOCKER_TARGET"
 : > "$TEST_DOCKER_LOG"
+export TEST_EXPECT_AUTH=1
+export TEST_EXPECT_AUTH_TOKEN=install-token
 INSTALL_BIN="$TEST_DIR/bin/installed-updater" \
 CONFIG_FILE="$TEST_DIR/installed.conf" \
 SYSTEMD_DIR="$TEST_DIR/systemd" \
 STATE_DIR="$TEST_DIR/docker/installed-state" \
-"$REPO_DIR/install.sh" --docker-container test-caddy --interval 5m
+"$REPO_DIR/install.sh" --docker-container test-caddy --interval 5m --github-token install-token
 grep -Fxq "MODE='docker'" "$TEST_DIR/installed.conf"
 grep -Fxq "DOCKER_CONTAINER='test-caddy'" "$TEST_DIR/installed.conf"
+grep -Fxq "GITHUB_TOKEN='install-token'" "$TEST_DIR/installed.conf"
 grep -Fq 'ExecStart=' "$TEST_DIR/systemd/caddy-remote-whitelist.service"
 grep -Fq 'OnUnitActiveSec=5m' "$TEST_DIR/systemd/caddy-remote-whitelist.timer"
 grep -Fxq 'reload' "$TEST_DOCKER_LOG"

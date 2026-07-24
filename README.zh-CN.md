@@ -59,6 +59,15 @@ sudo sh /tmp/caddy-remote-whitelist-install.sh \
   --interval 5m
 ```
 
+如果白名单数据仓库是私有仓库，一键安装时也可以直接指定令牌：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/shuguangnet/caddy-remote-whitelist/main/install.sh \
+  -o /tmp/caddy-remote-whitelist-install.sh
+sudo GITHUB_TOKEN="$GITHUB_TOKEN" sh /tmp/caddy-remote-whitelist-install.sh \
+  --interval 5m
+```
+
 也可以克隆仓库后运行：
 
 ```bash
@@ -73,6 +82,29 @@ https://raw.githubusercontent.com/shuguangnet/caddy-whitelist-data/main/allowed-
 ```
 
 其他用户仍可通过 `--url` 指定自己的 HTTPS 白名单片段。
+
+### 私有 GitHub 仓库
+
+如果白名单数据仓库是私有仓库，可以在安装时提供一个有仓库内容读取权限的 GitHub token：
+
+```bash
+sudo sh /tmp/caddy-remote-whitelist-install.sh \
+  --interval 5m \
+  --github-token "$GITHUB_TOKEN"
+```
+
+安装器会把 token 保存到 `/etc/caddy-remote-whitelist.conf`，该文件权限为
+`0600`。后续 systemd timer 同步时会自动带上这个 token 读取远程片段。
+
+也可以通过环境变量传入：
+
+```bash
+sudo GITHUB_TOKEN="$GITHUB_TOKEN" ./install.sh \
+  --interval 5m
+```
+
+推荐使用 fine-grained GitHub token，只授权白名单数据仓库，并只给
+`Contents: Read-only` 权限。
 
 ### Docker / 1Panel
 
@@ -142,6 +174,7 @@ sudo ./uninstall.sh
 ## 安全说明
 
 能够修改远程文件的人，也就能够修改所有服务器的访问白名单。请使用 HTTPS、保护好文件发布账户，并避免使用第三方可控制的地址。带查询参数的凭据会存储在本机 root-only 配置中，但仍可能出现在 Web 服务日志里；更推荐使用非敏感且难猜测的路径。
+私有 GitHub 仓库建议使用只读 fine-grained token，并且只授权白名单数据仓库。命令行参数可能进入 shell history，交互安装时更推荐使用 `GITHUB_TOKEN` 环境变量。相比把凭据放在 URL 查询参数里，使用 Authorization header 更合适。
 
 ## License
 
