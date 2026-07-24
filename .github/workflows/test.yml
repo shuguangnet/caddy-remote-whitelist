@@ -1,0 +1,22 @@
+name: Test
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  shell:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Run tests
+        run: ./tests/run.sh
+      - name: Test whitelist scanner
+        run: python3 -m unittest tests/test_scan_caddy_allowlists.py
+      - name: Run ShellCheck
+        run: shellcheck install.sh uninstall.sh tests/run.sh
+      - name: Validate example Caddyfile
+        run: docker run --rm -v "$PWD/examples:/srv:ro" caddy:2.10-alpine caddy validate --config /srv/Caddyfile

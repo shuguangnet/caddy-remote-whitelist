@@ -1,0 +1,15 @@
+(restricted_clients) {
+	import /srv/allowed-clients.caddy
+}
+
+:8080 {
+	import restricted_clients
+
+	handle @allowed {
+		respond "allowed" 200
+	}
+
+	handle {
+		respond "forbidden" 403
+	}
+}

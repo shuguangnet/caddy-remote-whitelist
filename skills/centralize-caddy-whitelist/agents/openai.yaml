@@ -1,0 +1,4 @@
+interface:
+  display_name: "Caddy Whitelist Centralizer"
+  short_description: "Consolidate scattered Caddy IP allowlists safely"
+  default_prompt: "Use $centralize-caddy-whitelist to migrate my existing Caddy allowlists into one remotely managed fragment."

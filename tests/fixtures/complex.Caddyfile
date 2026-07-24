@@ -1,0 +1,27 @@
+(restricted_clients) {
+	@allowed remote_ip 192.0.2.10 198.51.100.0/24
+}
+
+http://192.0.2.80:8317 {
+	import restricted_clients
+	handle @allowed {
+		reverse_proxy 127.0.0.1:8817
+	}
+	handle {
+		respond 403
+	}
+}
+
+(migrated_nginx_allowed_clients) {
+	@allowed remote_ip 192.0.2.10 203.0.113.0/24
+}
+
+(migrated_local_proxy) {
+	import migrated_nginx_allowed_clients
+	handle @allowed {
+		reverse_proxy 127.0.0.1:{args[0]}
+	}
+	handle {
+		respond 403
+	}
+}
