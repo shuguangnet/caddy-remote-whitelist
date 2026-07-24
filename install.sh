@@ -4,13 +4,14 @@ set -eu
 PROGRAM_NAME="caddy-remote-whitelist"
 INSTALL_BIN="${INSTALL_BIN:-/usr/local/sbin/$PROGRAM_NAME}"
 CONFIG_FILE="${CONFIG_FILE:-${CADDY_REMOTE_WHITELIST_CONFIG:-/etc/caddy-remote-whitelist.conf}}"
+DEFAULT_REMOTE_URL="https://raw.githubusercontent.com/shuguangnet/caddy-whitelist-data/main/allowed-clients.caddy"
 
 usage() {
 	cat <<'EOF'
-Usage: sudo ./install.sh --url HTTPS_URL [options]
+Usage: sudo ./install.sh [options]
 
 Options:
-  --url URL             Remote Caddy whitelist fragment (required)
+  --url URL             Remote fragment (default: shuguangnet/caddy-whitelist-data)
   --interval DURATION   Sync interval, for example 1m, 5m, 1h (default: 5m)
   --target FILE         Local cached fragment
   --caddyfile FILE      Main Caddyfile
@@ -119,7 +120,7 @@ CADDYFILE="${CADDYFILE:-/etc/caddy/Caddyfile}"
 CADDY_BIN="${CADDY_BIN:-caddy}"
 CADDY_SERVICE="${CADDY_SERVICE:-caddy}"
 INTERVAL="${INTERVAL:-5m}"
-REMOTE_URL="${REMOTE_URL:-}"
+REMOTE_URL="${REMOTE_URL:-$DEFAULT_REMOTE_URL}"
 MAX_BYTES="${MAX_BYTES:-1048576}"
 
 while [ "$#" -gt 0 ]; do
@@ -143,7 +144,6 @@ fi
 
 case "$REMOTE_URL" in
 	https://*) ;;
-	'') printf '%s\n' '--url is required.' >&2; exit 2 ;;
 	*) printf 'Only HTTPS URLs are accepted.\n' >&2; exit 2 ;;
 esac
 

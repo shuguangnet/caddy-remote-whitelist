@@ -56,7 +56,6 @@ curl -fsSL https://raw.githubusercontent.com/shuguangnet/caddy-remote-whitelist/
   -o /tmp/caddy-remote-whitelist-install.sh
 
 sudo sh /tmp/caddy-remote-whitelist-install.sh \
-  --url https://config.example.com/caddy/allowed-clients.caddy \
   --interval 5m
 ```
 
@@ -64,9 +63,16 @@ sudo sh /tmp/caddy-remote-whitelist-install.sh \
 
 ```bash
 sudo ./install.sh \
-  --url https://config.example.com/caddy/allowed-clients.caddy \
   --interval 5m
 ```
+
+安装器默认使用：
+
+```text
+https://raw.githubusercontent.com/shuguangnet/caddy-whitelist-data/main/allowed-clients.caddy
+```
+
+其他用户仍可通过 `--url` 指定自己的 HTTPS 白名单片段。
 
 可自定义本地文件、Caddyfile 和服务名称：
 

@@ -59,7 +59,6 @@ Clone the repository and run:
 
 ```bash
 sudo ./install.sh \
-  --url https://config.example.com/caddy/allowed-clients.caddy \
   --interval 5m
 ```
 
@@ -69,8 +68,16 @@ Or, after the GitHub repository is published:
 curl -fsSL https://raw.githubusercontent.com/shuguangnet/caddy-remote-whitelist/main/install.sh \
   -o /tmp/caddy-remote-whitelist-install.sh
 sudo sh /tmp/caddy-remote-whitelist-install.sh \
-  --url https://config.example.com/caddy/allowed-clients.caddy
+  --interval 5m
 ```
+
+By default the installer uses:
+
+```text
+https://raw.githubusercontent.com/shuguangnet/caddy-whitelist-data/main/allowed-clients.caddy
+```
+
+Pass `--url` to use a different HTTPS fragment.
 
 The installer accepts custom paths and service names:
 
