@@ -30,7 +30,16 @@ cat > "$TEST_DIR/bin/systemctl" <<'EOF'
 #!/bin/sh
 printf '%s\n' "$*" >> "$TEST_SYSTEMCTL_LOG"
 EOF
-chmod +x "$TEST_DIR/bin/curl" "$TEST_DIR/bin/caddy" "$TEST_DIR/bin/systemctl"
+
+cat > "$TEST_DIR/bin/id" <<'EOF'
+#!/bin/sh
+if [ "${1:-}" = "-u" ]; then
+	printf '0\n'
+	exit 0
+fi
+exec /usr/bin/id "$@"
+EOF
+chmod +x "$TEST_DIR/bin/curl" "$TEST_DIR/bin/caddy" "$TEST_DIR/bin/systemctl" "$TEST_DIR/bin/id"
 
 cat > "$TEST_DIR/config" <<EOF
 REMOTE_URL='https://example.test/allowed.caddy'
