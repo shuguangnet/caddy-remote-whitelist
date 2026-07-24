@@ -79,6 +79,23 @@ https://raw.githubusercontent.com/shuguangnet/caddy-whitelist-data/main/allowed-
 
 Pass `--url` to use a different HTTPS fragment.
 
+### Docker and 1Panel
+
+The installer automatically selects Docker mode when it finds exactly one
+running Caddy container. A container can also be selected explicitly:
+
+```bash
+sh /tmp/caddy-remote-whitelist-install.sh \
+  --docker-container 1Panel-caddy-5mTH \
+  --interval 5m
+```
+
+Docker mode uses `/etc/caddy/Caddyfile` and
+`/etc/caddy/remote-whitelist.caddy` inside the container by default. It updates
+the fragment with `docker cp`, then runs `caddy validate` and `caddy reload`
+inside the container. The installer warns when the target is not under a
+Docker volume or bind mount because it would be lost on container recreation.
+
 The installer accepts custom paths and service names:
 
 ```bash
@@ -99,7 +116,7 @@ Run `./install.sh --help` for all options. Settings are stored in
 - The downloaded file must be non-empty and no larger than 1 MiB by default.
 - An unchanged file does not reload Caddy.
 - A failed download keeps the last working file.
-- A failed `caddy validate` restores the previous file.
+- A failed `caddy validate` restores the previous file in systemd and Docker modes.
 - A systemd timer synchronizes the file every five minutes by default.
 
 Useful commands:

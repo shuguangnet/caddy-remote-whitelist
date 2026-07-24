@@ -74,6 +74,33 @@ https://raw.githubusercontent.com/shuguangnet/caddy-whitelist-data/main/allowed-
 
 其他用户仍可通过 `--url` 指定自己的 HTTPS 白名单片段。
 
+### Docker / 1Panel
+
+安装器会自动识别唯一运行中的 Caddy 容器，因此 1Panel 通常可以直接运行标准安装命令。也可以明确指定容器：
+
+```bash
+sh /tmp/caddy-remote-whitelist-install.sh \
+  --docker-container 1Panel-caddy-5mTH \
+  --interval 5m
+```
+
+Docker 模式默认使用容器内路径：
+
+```text
+Caddyfile: /etc/caddy/Caddyfile
+白名单:    /etc/caddy/remote-whitelist.caddy
+```
+
+安装器会通过 `docker cp` 更新文件，并在容器内运行 `caddy validate` 和 `caddy reload`。请确保 Caddyfile 已包含：
+
+```caddyfile
+(restricted_clients) {
+	import /etc/caddy/remote-whitelist.caddy
+}
+```
+
+如果目标文件不在 Docker volume 或 bind mount 中，安装器会警告，因为容器重建后该文件可能丢失。
+
 可自定义本地文件、Caddyfile 和服务名称：
 
 ```bash
@@ -93,7 +120,7 @@ sudo ./install.sh \
 - 下载结果不能为空，默认最大 1 MiB。
 - 内容没有变化时不会 reload Caddy。
 - 下载失败时继续使用最后一份有效文件。
-- `caddy validate` 失败时自动恢复旧文件。
+- systemd 和 Docker 模式下，`caddy validate` 失败都会自动恢复旧文件。
 - 默认由 systemd timer 每 5 分钟同步一次。
 
 常用命令：
