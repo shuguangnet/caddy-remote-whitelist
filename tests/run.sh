@@ -165,6 +165,7 @@ rm -f "$TEST_DOCKER_TARGET"
 INSTALL_BIN="$TEST_DIR/bin/installed-updater" \
 CONFIG_FILE="$TEST_DIR/installed.conf" \
 SYSTEMD_DIR="$TEST_DIR/systemd" \
+STATE_DIR="$TEST_DIR/docker/installed-state" \
 "$REPO_DIR/install.sh" --docker-container test-caddy --interval 5m
 grep -Fxq "MODE='docker'" "$TEST_DIR/installed.conf"
 grep -Fxq "DOCKER_CONTAINER='test-caddy'" "$TEST_DIR/installed.conf"
