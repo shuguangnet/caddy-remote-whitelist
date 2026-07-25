@@ -128,6 +128,7 @@ update_whitelist() {
 			--proto '=https' --tlsv1.2 \
 			--connect-timeout 10 --max-time 30 \
 			--header "Authorization: Bearer $GITHUB_TOKEN" \
+			--header 'Accept: application/vnd.github.raw' \
 			--output "$temp_file" "$REMOTE_URL"
 	else
 		curl --fail --silent --show-error --location \
